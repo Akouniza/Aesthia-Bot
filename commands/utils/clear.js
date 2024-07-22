@@ -5,27 +5,30 @@ module.exports = {
     // Define the command data
     data: new SlashCommandBuilder()
         .setName('clear')
-        .setDescription('Clears a specified number of messages from the channel.')
+        .setDescription('Clears a specified number of messages from the channel or all messages if no number is specified.')
         .addIntegerOption(option =>
             option.setName('amount')
                 .setDescription('The number of messages to clear')
-                .setRequired(true)),
+                .setRequired(false)), // Make the amount optional
     
     // Define the execute function
     async execute(interaction) {
         // Get the amount of messages to clear from the interaction options
         const amount = interaction.options.getInteger('amount');
 
-        // Check if the amount is a valid number and within a reasonable range
-        if (isNaN(amount) || amount <= 0 || amount > 100) {
-            return interaction.reply('Please provide a valid number of messages to clear (1-100).');
+        // Determine the number of messages to fetch
+        const fetchLimit = amount ? amount : 100; // Default to 100 if no amount is specified
+
+        // Check if the amount is within a reasonable range
+        if (amount && (amount <= 0 || amount > 100)) {
+            return interaction.reply({ content: 'Please provide a valid number of messages to clear (1-100).', ephemeral: true });
         }
 
         try {
             // Fetch the specified number of messages from the channel
-            const messages = await interaction.channel.messages.fetch({ limit: amount });
+            const messages = await interaction.channel.messages.fetch({ limit: fetchLimit });
             // Bulk delete the fetched messages
-            await interaction.channel.bulkDelete(messages);
+            await interaction.channel.bulkDelete(messages, true);
 
             // Create an embed for the success message
             const successEmbed = new EmbedBuilder()

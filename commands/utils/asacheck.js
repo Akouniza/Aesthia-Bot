@@ -71,10 +71,11 @@ module.exports = {
                 }
             } catch (error) {
                 console.error('Error fetching server status:', error);
+                const errorMessage = 'There was an error fetching the server status. Please try again later.';
                 if (interaction.replied || interaction.deferred) {
-                    await interaction.editReply('There was an error fetching the server status. Please try again later.');
+                    await interaction.editReply(errorMessage);
                 } else {
-                    await interaction.reply('There was an error fetching the server status. Please try again later.');
+                    await interaction.reply(errorMessage);
                 }
             }
         };
