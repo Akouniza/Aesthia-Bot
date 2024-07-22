@@ -1,4 +1,5 @@
-// ./events/ready.js
+// events/combinedEvents.js
+
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v10');
 const { ActivityType } = require('discord.js');
@@ -6,9 +7,10 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2');
 const registerCommands = require('./registerCommands');
+const refreshServers = require('./refreshServers');
 
 module.exports = {
-    name: 'ready',
+    name: 'combinedEvents',
     once: true,
     async execute(client) {
         // Database connection setup
@@ -56,11 +58,10 @@ module.exports = {
         const uniqueUsers = client.users.cache.size;
 
         // Trigger the refreshServers event
-        const refreshServers = require('./refreshServers');
         await refreshServers.execute(client);
 
         // List the names of custom event files
-        const eventFiles = fs.readdirSync(path.join(__dirname, '..', 'events')).filter(file => file.endsWith('.js') && file !== 'ready.js');
+        const eventFiles = fs.readdirSync(path.join(__dirname, '..', 'events')).filter(file => file.endsWith('.js') && file !== 'combinedEvents.js');
 
         console.log(`
         \x1b[31m                      _    _      _                   ____          _   
@@ -105,5 +106,28 @@ module.exports = {
         const commands = client.commands.map(command => command.data.toJSON());
 
         // Register the slash commands on the specified guild
+    },
+
+    // Execute function to run when an interaction occurs
+    interactionCreate(interaction, client) {
+        // Check if the interaction is a slash command
+        if (!interaction.isCommand()) return;
+
+        // Get the command associated with the interaction by its name
+        const command = client.commands.get(interaction.commandName);
+
+        // If the command is not found, return and do nothing
+        if (!command) return;
+
+        try {
+            // Execute the command by passing the interaction and client objects
+            command.execute(interaction, client);
+        } catch (error) {
+            // If an error occurs during command execution, log the error
+            console.error(error);
+
+            // Reply to the user with an error message (ephemeral means it's only visible to the user)
+            interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+        }
     },
 };
