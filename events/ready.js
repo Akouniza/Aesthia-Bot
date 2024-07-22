@@ -7,7 +7,6 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2');
 const registerCommands = require('./registerCommands');
-const refreshServers = require('./refreshServers');
 
 module.exports = {
     name: 'combinedEvents',
@@ -56,9 +55,6 @@ module.exports = {
         const commandCount = client.commands.size;
         const serverCount = client.guilds.cache.size;
         const uniqueUsers = client.users.cache.size;
-
-        // Trigger the refreshServers event
-        await refreshServers.execute(client);
 
         // List the names of custom event files
         const eventFiles = fs.readdirSync(path.join(__dirname, '..', 'events')).filter(file => file.endsWith('.js') && file !== 'combinedEvents.js');
