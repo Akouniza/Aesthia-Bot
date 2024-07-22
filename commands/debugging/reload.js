@@ -5,6 +5,15 @@ const fs = require('fs').promises; // Import fs with promises
 const path = require('path'); // Import path module
 const registerCommands = require('../../events/registerCommands'); // Import the registerCommands function
 
+async function getCommandFiles(dir) {
+    const subdirs = await fs.readdir(dir);
+    const files = await Promise.all(subdirs.map(async (subdir) => {
+        const res = path.resolve(dir, subdir);
+        return (await fs.stat(res)).isDirectory() ? getCommandFiles(res) : res;
+    }));
+    return files.flat().filter(file => file.endsWith('.js'));
+}
+
 async function reloadCommands(client) {
     let errorMessages = []; // Initialize an array to store error messages
 
@@ -12,30 +21,23 @@ async function reloadCommands(client) {
         // Clear the commands collection
         client.commands.clear();
 
-        // Directories to reload commands from
-        const commandDirectories = ['commands/moderations', 'commands/utils'];
-        for (const directory of commandDirectories) {
-            // Read all files in the directory
-            const commandFiles = await fs.readdir(path.join(__dirname, '..', '..', directory));
-            // Filter out non-JS files
-            const jsFiles = commandFiles.filter(file => file.endsWith('.js'));
+        // Get all command files in the commands directory and its subdirectories
+        const commandFiles = await getCommandFiles(path.join(__dirname, '..', '..', 'commands'));
 
-            // Load each command file
-            await Promise.all(jsFiles.map(async (file) => {
-                const filePath = path.join(__dirname, '..', '..', directory, file);
-                try {
-                    // Clear the require cache
-                    delete require.cache[require.resolve(filePath)];
-                    // Require the command file
-                    const command = require(filePath);
-                    // Set the command in the client's commands collection
-                    client.commands.set(command.data.name, command);
-                } catch (error) {
-                    console.error(`Error loading command ${file}:`, error);
-                    errorMessages.push(`Error loading command ${file}: ${error.message}`);
-                }
-            }));
-        }
+        // Load each command file
+        await Promise.all(commandFiles.map(async (file) => {
+            try {
+                // Clear the require cache
+                delete require.cache[require.resolve(file)];
+                // Require the command file
+                const command = require(file);
+                // Set the command in the client's commands collection
+                client.commands.set(command.data.name, command);
+            } catch (error) {
+                console.error(`Error loading command ${file}:`, error);
+                errorMessages.push(`Error loading command ${file}: ${error.message}`);
+            }
+        }));
 
         // Register the commands with Discord
         await registerCommands(client);
