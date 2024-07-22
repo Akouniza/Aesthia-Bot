@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, Permissions, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionsBitField, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -40,7 +40,7 @@ module.exports = {
         }
 
         if (subcommand === 'ban') {
-            if (!interaction.member.permissions.has(Permissions.FLAGS.BAN_MEMBERS)) {
+            if (!interaction.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
                 return interaction.reply({ content: 'You do not have permission to ban members.', ephemeral: true });
             }
 
@@ -57,7 +57,7 @@ module.exports = {
                 interaction.reply({ content: 'An error occurred while banning the user.', ephemeral: true });
             }
         } else if (subcommand === 'kick') {
-            if (!interaction.member.permissions.has(Permissions.FLAGS.KICK_MEMBERS)) {
+            if (!interaction.member.permissions.has(PermissionsBitField.Flags.KickMembers)) {
                 return interaction.reply({ content: 'You do not have permission to kick members.', ephemeral: true });
             }
 
