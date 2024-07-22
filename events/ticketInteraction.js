@@ -1,6 +1,5 @@
-// ./events/ticketInteraction.js
 const { ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, ChannelType, EmbedBuilder, ButtonBuilder, PermissionsBitField, ButtonStyle } = require('discord.js');
-const ticket = require('../commands/models/ticketSchema');
+const ticket = require('../database/models/ticketSchema');
 const { createTranscript } = require('discord-html-transcripts');
 
 module.exports = {

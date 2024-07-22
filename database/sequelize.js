@@ -1,4 +1,5 @@
 const { Sequelize } = require('sequelize');
+require('dotenv').config(); // Ensure environment variables are loaded
 
 const sequelize = new Sequelize({
   dialect: 'mysql',
@@ -15,7 +16,7 @@ const sequelize = new Sequelize({
     console.log('Sequelize: Connection has been established successfully.');
 
     await sequelize.sync();
-    console.log('All models were synchronized successfully.');
+    //console.log('All models were synchronized successfully.');
   } catch (error) {
     console.error('Sequelize: Unable to connect to the database or sync models:', error);
   }

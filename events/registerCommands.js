@@ -12,7 +12,6 @@ module.exports = async (client) => {
             Routes.applicationGuildCommands(client.user.id, guildId),
             { body: commands }
         );
-        //console.log('Successfully registered application (/) commands.');
         return commands.length; // Return the count of registered commands
     } catch (error) {
         console.error(error);

@@ -1,15 +1,11 @@
-// events/combinedEvents.js
-
-const { REST } = require('@discordjs/rest');
-const { Routes } = require('discord-api-types/v10');
-const { ActivityType } = require('discord.js');
+const mysql = require('mysql2'); // Import the mysql2 module
 const fs = require('fs');
 const path = require('path');
-const mysql = require('mysql2');
-const registerCommands = require('./registerCommands');
+const { REST } = require('@discordjs/rest'); // Import REST from discord.js
+const registerCommands = require('../events/registerCommands'); // Import the registerCommands function
 
 module.exports = {
-    name: 'combinedEvents',
+    name: 'ready',
     once: true,
     async execute(client) {
         // Database connection setup
@@ -20,13 +16,14 @@ module.exports = {
             password: process.env.DB_PASSWORD,
             database: process.env.DB_DATABASE,
         });
+        
+        // Register commands
+        await registerCommands(client);
 
         // Connect to the database
         db.connect((err) => {
             if (err) {
                 console.error('Error connecting to the database:', err);
-            } else {
-                console.log('Connected to the database successfully.');
             }
         });
 
@@ -34,8 +31,6 @@ module.exports = {
         db.query('SELECT 1', (pingError) => {
             if (pingError) {
                 console.error('Error pinging the database:', pingError);
-            } else {
-                console.log('Database pinged successfully.');
             }
         });
 
@@ -71,26 +66,24 @@ module.exports = {
 
         // Display Aesthia information
         console.log(`
-╭────────── Aesthia ───────────╮
-│  Prefixes           │ /      │
-│  Language           │ en-US  │
-│  Aesthia version    │ 1.0    │
-│  Discord.js version │ v14.0  │
-│  Storage type       │ MarDB  │
-│  ──────────────────────────  │
-│  Shards             │ \x1b[33;1m${client.shard ? `(${client.shard.count})`.padStart(4) : '(1)'.padStart(6)}\x1b[0m │
-│  Servers            │ \x1b[33;1m${`(${serverCount})`.padStart(6)}\x1b[0m │
-│  Unique Users       │ \x1b[31;1m${`(${uniqueUsers})`.padStart(6)}\x1b[0m │
-│  Commands Loaded    │ \x1b[34;1m${`(${commandCount})`.padStart(6)}\x1b[0m │
-│  Custom Events      │ \x1b[34;1m${`(${eventFiles.length})`.padStart(6)}\x1b[0m │
-╰──────────────────────────────╯
+        ╭────────── Aesthia ───────────╮
+        │  Prefixes           │ /      │
+        │  Language           │ en-US  │
+        │  Aesthia version    │ 1.0    │
+        │  Discord.js version │ v14.0  │
+        │  Storage type       │ MarDB  │
+        │  ──────────────────────────  │
+        │  Shards             │ \x1b[33;1m${client.shard ? `(${client.shard.count})`.padStart(4) : '(1)'.padStart(6)}\x1b[0m │
+        │  Servers            │ \x1b[33;1m${`(${serverCount})`.padStart(6)}\x1b[0m │
+        │  Unique Users       │ \x1b[31;1m${`(${uniqueUsers})`.padStart(6)}\x1b[0m │
+        │  Commands Loaded    │ \x1b[34;1m${`(${commandCount})`.padStart(6)}\x1b[0m │
+        │  Custom Events      │ \x1b[34;1m${`(${eventFiles.length})`.padStart(6)}\x1b[0m │
+        ╰──────────────────────────────╯
         `);
 
         console.log(`Logged in as ${client.user.tag}`);
         const inviteURL = `https://discord.com/oauth2/authorize?client_id=${client.user.id}&scope=bot&permissions=8`;
         console.log(`Invite URL: \x1b[34;1m${inviteURL}`);
-
-        registerCommands(client);
 
         // Fetch the guild ID from your .env file
         const guildId = process.env.GUILD_ID;
@@ -102,28 +95,27 @@ module.exports = {
         const commands = client.commands.map(command => command.data.toJSON());
 
         // Register the slash commands on the specified guild
-    },
 
-    // Execute function to run when an interaction occurs
-    interactionCreate(interaction, client) {
-        // Check if the interaction is a slash command
-        if (!interaction.isCommand()) return;
+        // Add interactionCreate event listener
+        client.on('interactionCreate', async (interaction) => {
+            //console.log(`Interaction received: ${interaction.commandName}`);
 
-        // Get the command associated with the interaction by its name
-        const command = client.commands.get(interaction.commandName);
+            if (!interaction.isCommand()) return;
 
-        // If the command is not found, return and do nothing
-        if (!command) return;
+            const command = client.commands.get(interaction.commandName);
 
-        try {
-            // Execute the command by passing the interaction and client objects
-            command.execute(interaction, client);
-        } catch (error) {
-            // If an error occurs during command execution, log the error
-            console.error(error);
+            if (!command) {
+                console.log(`Command not found: ${interaction.commandName}`);
+                return;
+            }
 
-            // Reply to the user with an error message (ephemeral means it's only visible to the user)
-            interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
-        }
+            try {
+                await command.execute(interaction, client);
+                //console.log(`Command executed: ${interaction.commandName}`);
+            } catch (error) {
+                console.error(`Error executing command ${interaction.commandName}:`, error);
+                await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+            }
+        });
     },
 };

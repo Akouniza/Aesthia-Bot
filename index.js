@@ -23,21 +23,21 @@ client.commands = new Collection();
 
 // Function to load bot commands from a directory
 function loadCommands(directory) {
-    // Read all files in the specified directory that end with .js
-    const commandFiles = fs.readdirSync(path.join(__dirname, directory)).filter(file => file.endsWith('.js'));
+    const commandFiles = fs.readdirSync(directory, { withFileTypes: true });
 
     for (const file of commandFiles) {
-        const filePath = path.join(__dirname, directory, file);
-        const command = require(filePath); // Load the command module
-
-        // Store the loaded command in the collection using its name (without .js extension) as the key
-        client.commands.set(command.data.name, command);
+        const filePath = path.join(directory, file.name);
+        if (file.isDirectory()) {
+            loadCommands(filePath); // Recursively load commands from subdirectories
+        } else if (file.isFile() && file.name.endsWith('.js')) {
+            const command = require(filePath); // Load the command module
+            client.commands.set(command.data.name, command); // Store the loaded command in the collection
+        }
     }
 }
 
 // Load commands from the 'commands/moderations' and 'commands/utils' directories
-loadCommands('commands/moderations');
-loadCommands('commands/utils');
+loadCommands(path.join(__dirname, 'commands'));
 
 // Event handler for interactionCreate
 const eventFiles = fs.readdirSync(path.join(__dirname, 'events')).filter(file => file.endsWith('.js'));
@@ -49,4 +49,6 @@ for (const file of eventFiles) {
 }
 
 // Log in to Discord using the bot's token from the environment variables
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_TOKEN).catch(err => {
+    console.error('Error logging in:', err);
+});
