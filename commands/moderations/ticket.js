@@ -1,6 +1,6 @@
 // ./commands/moderations/ticket.js
 const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField, ActionRowBuilder, StringSelectMenuBuilder, ChannelType } = require('discord.js');
-const ticket = require('../../database/models/ticketSchema');
+const ticket = require('../models/ticketSchema');
 
 module.exports = {
     data: new SlashCommandBuilder()

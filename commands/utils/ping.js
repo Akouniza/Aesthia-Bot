@@ -1,18 +1,18 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js'); // Import necessary classes from discord.js
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('ping')
-        .setDescription('Replies with Pong!'),
+        .setName('ping') // Set the command name to 'ping'
+        .setDescription('Replies with Pong!'), // Set the command description
 
     async execute(interaction) {
         // Function to create the embed with latency information
         const createEmbed = (roundTripLatency) => {
             return new EmbedBuilder()
-                .setColor('#00ff00')
-                .setTitle('Pong!')
-                .setDescription(`Round-trip latency: ${roundTripLatency}ms`)
-                .setTimestamp();
+                .setColor('#00ff00') // Set the embed color to green
+                .setTitle('Pong!') // Set the embed title
+                .setDescription(`Round-trip latency: ${roundTripLatency}ms`) // Set the embed description with the latency
+                .setTimestamp(); // Add a timestamp to the embed
         };
 
         // Function to create the action row with the refresh button
@@ -60,7 +60,6 @@ module.exports = {
                         await i.followUp({ content: 'This interaction has expired. Please try again.', ephemeral: true });
                     } else {
                         console.error('An error occurred while updating the interaction:', error);
-                        await i.followUp({ content: 'An error occurred. Please try again later.', ephemeral: true });
                     }
                 }
             }
